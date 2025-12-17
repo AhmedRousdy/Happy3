@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+
+{% block title %}Task Manager - Dashboard{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-4 relative z-20">
+        <div class="mb-4 md:mb-0">
+            <h1 class="text-3xl font-bold text-slate-800">Task Dashboard</h1>
+            <p id="lastSyncTime" class="text-slate-500 mt-1">Last synced: Never</p>
+        </div>
+        
+        <div class="flex flex-col-reverse sm:flex-row items-center gap-2 w-full md:w-auto">
+             <!-- Historical Sync -->
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <input type="date" id="historicalSyncDate" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5">
+                <button id="historicalSyncBtn" class="flex-shrink-0 pill-btn bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 !py-2.5 !px-4">
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Sync Date
+                </button>
+            </div>
+            
+            <!-- Main Actions -->
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <!-- Settings Button -->
+                <button id="settingsBtn" class="pill-btn bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 !py-2.5 !px-3">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.39.44 1.052.12 1.45l-.527.737c-.25.35-.272.806-.108 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.11v1.093c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.142.855.108 1.205l-.527-.737a1.125 1.125 0 01.12-1.45l.773-.774a1.125 1.125 0 011.45-.12l.737.527c.35.25.806.272 1.204.108.397-.165.71.505.78-.93l.15-.893z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+                <!-- Sync Button with Batching Info -->
+                <div class="relative flex flex-col items-end">
+                    <button id="syncBtn" class="pill-btn bg-primary hover:bg-primary-hover text-white !py-2.5 !px-4 w-full sm:w-auto transition-all">
+                        <svg id="syncIcon" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m-15.357-2a8.001 8.001 0 0015.357 2m0 0H15" />
+                        </svg>
+                        <svg id="syncSpinner" class="h-5 w-5 mr-2 sync-btn-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <path class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></path>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="syncText">Sync New Emails</span>
+                    </button>
+                    
+                    <!-- Batching Message -->
+                    <div id="batchingMessage" class="hidden text-xs text-amber-600 font-bold mt-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        Next sync in 45m
+                    </div>
+                    <!-- Force Sync Override -->
+                    <button id="forceSyncLink" class="hidden text-[10px] text-slate-400 hover:text-slate-600 underline mt-0.5">
+                        Sync anyway
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-6 bg-white p-3 rounded-lg border border-slate-200 shadow-sm items-center">
+        <div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            Filters:
+        </div>
+        
+        <!-- Project Filter -->
+        <div class="relative w-full sm:w-64">
+            <select id="filterProject" class="w-full p-2 pl-3 pr-8 text-sm text-slate-700 bg-slate-50 border border-slate-300 rounded-md focus:ring-primary focus:border-primary">
+                <option value="">All Projects</option>
+            </select>
+        </div>
+
+        <!-- Sender Filter -->
+        <div class="relative w-full sm:w-64">
+            <select id="filterSender" class="w-full p-2 pl-3 pr-8 text-sm text-slate-700 bg-slate-50 border border-slate-300 rounded-md focus:ring-primary focus:border-primary">
+                <option value="">All Senders (Circle)</option>
+            </select>
+        </div>
+        
+        <!-- Clear Button -->
+        <button id="clearFiltersBtn" class="hidden text-sm text-red-500 hover:text-red-700 font-medium hover:underline">
+            Clear Filters
+        </button>
+    </div>
+
+    <!-- VIEW SWITCHER TABS -->
+    <div class="flex space-x-1 bg-slate-200 p-1 rounded-lg mb-6 w-fit">
+        <button id="tab-view-executive" class="view-tab-btn active flex items-center px-4 py-2 rounded-md text-sm font-semibold transition-all shadow-sm bg-white text-primary" onclick="switchMainView('executive')">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Executive View
+        </button>
+        <button id="tab-view-kanban" class="view-tab-btn flex items-center px-4 py-2 rounded-md text-sm font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all" onclick="switchMainView('kanban')">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+            Kanban View
+        </button>
+    </div>
+
+    <!-- VIEW 1: EXECUTIVE (Triage Categories) -->
+    <div id="view-executive" class="view-container">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Folder 1: Quick Actions -->
+            <div class="task-column bg-amber-50 border border-amber-200 rounded-xl p-4" data-category="quick_action">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h2 class="text-xl font-bold text-amber-800 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Quick Actions
+                    </h2>
+                    <span id="count-quick" class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">0</span>
+                </div>
+                <p class="text-xs text-amber-600 px-2 mb-3">Under 5 mins. Do these now.</p>
+                <div id="quick-tasks" class="task-list space-y-3 min-h-[100px]"></div>
+            </div>
+
+            <!-- Folder 2: Deep Work -->
+            <div class="task-column bg-blue-50 border border-blue-200 rounded-xl p-4" data-category="deep_work">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h2 class="text-xl font-bold text-blue-800 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/></svg>
+                        Deep Work
+                    </h2>
+                    <span id="count-deep" class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">0</span>
+                </div>
+                <p class="text-xs text-blue-600 px-2 mb-3">Strategy & Complex Tasks (>15m).</p>
+                <div id="deep-tasks" class="task-list space-y-3 min-h-[100px]"></div>
+            </div>
+
+            <!-- Folder 3: Waiting For -->
+            <div class="task-column bg-slate-100 border border-slate-300 rounded-xl p-4" data-category="waiting_for">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h2 class="text-xl font-bold text-slate-700 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Waiting For
+                    </h2>
+                    <span id="count-waiting" class="bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">0</span>
+                </div>
+                <p class="text-xs text-slate-500 px-2 mb-3">Delegated tasks & pending replies.</p>
+                <div id="waiting-tasks" class="task-list space-y-3 min-h-[100px]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: KANBAN (Status Based) -->
+    <div id="view-kanban" class="view-container hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Status 1: To Do (New) -->
+            <div class="task-column bg-white border border-slate-200 rounded-xl p-4" data-status="new">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h2 class="text-xl font-bold text-slate-700 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                        To Do
+                    </h2>
+                    <span id="count-todo" class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
+                </div>
+                <div id="todo-tasks" class="task-list space-y-3 min-h-[100px]"></div>
+            </div>
+
+            <!-- Status 2: In Progress -->
+            <div class="task-column bg-white border border-slate-200 rounded-xl p-4" data-status="in_progress">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h2 class="text-xl font-bold text-slate-700 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                        In Progress
+                    </h2>
+                    <span id="count-doing" class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
+                </div>
+                <div id="doing-tasks" class="task-list space-y-3 min-h-[100px]"></div>
+            </div>
+
+            <!-- Status 3: Paused -->
+            <div class="task-column bg-white border border-slate-200 rounded-xl p-4" data-status="paused">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h2 class="text-xl font-bold text-slate-700 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+                        Paused
+                    </h2>
+                    <span id="count-paused" class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
+                </div>
+                <div id="paused-tasks" class="task-list space-y-3 min-h-[100px]"></div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- --- SETTINGS MODAL --- -->
+<div id="settingsOverlay" class="modal-overlay">
+    <div id="settingsModalPanel" class="modal-panel rounded-xl !w-auto max-w-4xl h-[80vh] flex flex-col transition-all duration-300 ease-in-out">
+        <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-200">
+            <h2 class="text-2xl font-semibold text-slate-800">Application Settings</h2>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleModalMaximize('settingsModalPanel', 'settingsIconMax', 'settingsIconMin')" class="p-1 rounded text-slate-400 hover:text-primary hover:bg-slate-100 transition-colors" title="Maximize/Restore">
+                    <svg id="settingsIconMax" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                    <svg id="settingsIconMin" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <button id="settingsCloseBtn" class="p-1 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Settings Tabs & Content -->
+        <div class="flex space-x-4 mb-4 border-b border-slate-200">
+            <button class="settings-tab-btn active px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary" data-tab="general">General</button>
+            <button class="settings-tab-btn px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700" data-tab="classification">Classification Config</button>
+        </div>
+        <div class="flex-1 overflow-y-auto px-1">
+            <div id="tab-general" class="settings-tab-content">
+                <div class="space-y-6">
+                    <div>
+                        <label for="ollamaModelInput" class="block text-sm font-medium text-slate-700 mb-1">Main Ollama Model</label>
+                        <input type="text" id="ollamaModelInput" class="w-full p-2.5 border-2 border-slate-200 rounded-lg focus:ring-primary focus:border-primary transition-colors">
+                    </div>
+                </div>
+            </div>
+            <div id="tab-classification" class="settings-tab-content hidden space-y-8">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4"><p class="text-sm text-blue-800">Add your active Projects, Tags, and Domains.</p></div>
+                <!-- Classification UI here... -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Active Projects</h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="newProjectInput" placeholder="Add project..." class="flex-1 p-2 border rounded text-sm" onkeydown="if(event.key === 'Enter') addTag('projectsList', this.value)">
+                        <button class="bg-primary text-white px-3 py-1 rounded text-sm font-medium" onclick="addTag('projectsList', document.getElementById('newProjectInput').value)">Add</button>
+                    </div>
+                    <div id="projectsList" class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded border border-slate-200 min-h-[60px]"></div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Tags</h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="newTagInput" placeholder="Add tag..." class="flex-1 p-2 border rounded text-sm" onkeydown="if(event.key === 'Enter') addTag('tagsList', this.value)">
+                        <button class="bg-secondary text-white px-3 py-1 rounded text-sm font-medium" onclick="addTag('tagsList', document.getElementById('newTagInput').value)">Add</button>
+                    </div>
+                    <div id="tagsList" class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded border border-slate-200 min-h-[60px]"></div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Domains</h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="newDomainInput" placeholder="Add domain..." class="flex-1 p-2 border rounded text-sm" onkeydown="if(event.key === 'Enter') addTag('domainsList', this.value)">
+                        <button class="bg-slate-600 text-white px-3 py-1 rounded text-sm font-medium" onclick="addTag('domainsList', document.getElementById('newDomainInput').value)">Add</button>
+                    </div>
+                    <div id="domainsList" class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded border border-slate-200 min-h-[60px]"></div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-200">
+            <button id="settingsSaveBtn" class="pill-btn bg-primary hover:bg-primary-hover text-white">
+                <svg id="saveBtnIcon" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                <svg id="saveBtnSpinner" class="h-5 w-5 mr-2 sync-btn-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></path><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span id="saveBtnText">Save All Settings</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- --- TASK DETAIL MODAL --- -->
+<div id="taskModalOverlay" class="modal-overlay">
+    <div id="taskModalPanel" class="modal-panel rounded-xl !w-auto max-w-5xl w-full h-[85vh] flex flex-col transition-all duration-300 ease-in-out" data-current-task-id="">
+        <div class="flex justify-between items-start pt-6 px-8 border-b border-slate-200 bg-white rounded-t-xl">
+            <div class="flex-1">
+                <h2 id="modalTaskTitle" class="text-2xl font-bold text-slate-800 mb-4 line-clamp-2">Task Title</h2>
+                
+                <!-- AUTO-COMPLETION ALERT -->
+                <div id="modalAutoCompleteAlert" class="hidden mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r shadow-sm">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700 font-bold">Auto-Completed via Outlook Reply</p>
+                            <p id="modalAutoCompleteText" class="text-xs text-green-600 mt-1 italic"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Quick Reply Buttons -->
+                <div id="quickReplyButtons" class="flex gap-3 mb-4">
+                    <button id="btnReplyAck" class="flex-1 bg-white border border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-semibold py-3 px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                        Acknowledge
+                    </button>
+                    <button id="btnReplyDone" class="flex-1 bg-white border border-slate-300 hover:border-green-500 hover:bg-green-50 text-slate-700 hover:text-green-700 font-semibold py-3 px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Mark as Done
+                    </button>
+                    <button id="btnReplyDelegate" class="flex-1 bg-white border border-slate-300 hover:border-purple-500 hover:bg-purple-50 text-slate-700 hover:text-purple-700 font-semibold py-3 px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        Delegate
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                    <button class="task-tab-btn active pb-3 text-sm font-semibold text-primary border-b-2 border-primary transition-colors" data-tab="overview">Overview</button>
+                    <button class="task-tab-btn pb-3 text-sm font-semibold text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors" data-tab="reply">Custom Reply</button>
+                    <!-- View Original Email Button -->
+                    <button id="viewEmailBtn" onclick="viewOriginalEmail()" class="pb-3 text-sm font-semibold text-slate-500 hover:text-primary border-b-2 border-transparent transition-colors flex items-center gap-1 ml-auto">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        View Original Email
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 -mr-2 -mt-2">
+                <!-- Maximize Button -->
+                <button onclick="toggleModalMaximize('taskModalPanel', 'taskIconMax', 'taskIconMin')" class="p-2 rounded-full text-slate-400 hover:text-primary hover:bg-slate-100 transition-colors" title="Maximize/Restore">
+                    <svg id="taskIconMax" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                    <svg id="taskIconMin" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <button id="modalCloseBtn" class="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-8 bg-white">
+            <div id="task-tab-overview" class="task-tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Source Context</h4>
+                            <div class="flex flex-wrap gap-2 mb-4" id="modalTagsContainer"></div>
+                            <div class="space-y-3 text-sm">
+                                <div><span class="block text-xs text-slate-500">Project</span><span id="modalTaskProject" class="font-medium text-slate-800"></span></div>
+                                <div><span class="block text-xs text-slate-500">Domain</span><span id="modalTaskDomain" class="font-medium text-slate-800"></span></div>
+                            </div>
+                            <hr class="my-4 border-slate-200">
+                            <div class="space-y-3 text-sm overflow-hidden">
+                                <div><span class="block text-xs text-slate-500">From</span><span id="modalTaskSender" class="font-medium text-slate-800 truncate block"></span></div>
+                                <div><span class="block text-xs text-slate-500">To</span><span id="modalTaskTo" class="text-slate-600 truncate block"></span></div>
+                                <div><span class="block text-xs text-slate-500">Subject</span><span id="modalTaskSubject" class="text-slate-600 block line-clamp-2"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-8">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-2">Task Details</h3>
+                            <p id="modalTaskDetail" class="text-slate-600 leading-relaxed"></p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-2">Required Action</h3>
+                            <p id="modalTaskAction" class="text-slate-700 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="task-tab-reply" class="task-tab-content hidden h-full flex flex-col">
+                <label for="modalTaskReply" class="text-sm font-medium text-slate-700 mb-2">Draft your reply below:</label>
+                <textarea id="modalTaskReply" class="flex-1 w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-base leading-relaxed font-mono resize-none bg-slate-50" placeholder="Type your reply here..."></textarea>
+            </div>
+        </div>
+        <div class="p-6 bg-slate-50 border-t border-slate-200 rounded-b-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+            <button id="modalDeleteBtn" class="text-red-500 hover:text-red-700 text-sm font-medium flex items-center px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                <svg class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Delete Task
+            </button>
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <div id="replyActions" class="hidden flex gap-2 border-r border-slate-300 pr-3 mr-1">
+                    <button id="modalCopyBtn" class="pill-btn bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4">Copy Text</button>
+                    <button id="modalSendBtn" class="pill-btn bg-primary hover:bg-primary-hover text-white px-5">Send Email</button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="modalStartBtn" class="pill-btn bg-white border border-slate-300 text-slate-700 hover:text-blue-700 hover:border-blue-300 hover:bg-blue-50 px-4">Start</button>
+                    <button id="modalCompleteBtn" class="pill-btn bg-white border border-slate-300 text-slate-700 hover:text-green-700 hover:border-green-300 hover:bg-green-50 px-4">Complete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- --- CONFIRM DELETE MODAL --- -->
+<div id="confirmDeleteModal" class="modal-overlay">
+    <div class="modal-panel rounded-xl !w-auto max-w-lg">
+        <h2 class="text-xl font-semibold text-slate-800">Delete Task?</h2>
+        <p class="text-slate-600 mt-2">Are you sure?</p>
+        <p id="deleteTaskInfo" class="text-sm font-medium text-slate-700 mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200"></p>
+        <div class="flex justify-end gap-3 mt-6">
+            <button id="deleteCancelBtn" class="pill-btn bg-white border border-slate-300 text-slate-700">Cancel</button>
+            <button id="deleteConfirmBtn" class="pill-btn bg-danger hover:bg-red-700 text-white">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- --- EMAIL VIEWER MODAL --- -->
+<!-- Set z-index extremely high to force it over everything -->
+<div id="emailViewerModal" class="modal-overlay" style="z-index: 100;">
+    <div id="emailModalPanel" class="modal-panel rounded-xl !w-auto max-w-5xl w-full h-[90vh] flex flex-col transition-all duration-300 ease-in-out">
+        <div class="flex justify-between items-center mb-0 pb-3 px-4 pt-4 border-b border-slate-200">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2 truncate">
+                <svg class="h-6 w-6 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" /></svg>
+                Original Email
+            </h2>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleModalMaximize('emailModalPanel', 'emailIconMax', 'emailIconMin')" class="p-1 rounded text-slate-400 hover:text-primary hover:bg-slate-100 transition-colors" title="Maximize/Restore">
+                    <svg id="emailIconMax" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                    <svg id="emailIconMin" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <button onclick="closeEmailViewer()" class="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-hidden flex flex-col bg-white" id="emailViewerContent">
+            <div id="emailLoading" class="hidden flex-1 flex items-center justify-center text-slate-500 bg-slate-50">
+                <svg class="h-8 w-8 mr-3 sync-btn-spin text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></path>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Fetching from Exchange...
+            </div>
+            <div id="emailDisplay" class="hidden flex flex-col h-full">
+                <div class="bg-slate-50 border-b border-slate-200 transition-all duration-200" id="emailHeaderSection">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 id="emailSubject" class="text-lg font-bold text-slate-900 leading-tight flex-1 mr-4"></h3>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-xs text-slate-500 whitespace-nowrap" id="emailDate"></span>
+                                <button onclick="toggleEmailHeader()" class="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+                                    <span id="headerToggleText">Hide Details</span>
+                                    <svg id="headerToggleIcon" class="w-3 h-3 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="emailDetailsArea" class="transition-all duration-300 overflow-hidden">
+                            <div class="space-y-1.5 text-sm pb-2">
+                                <div class="flex gap-2">
+                                    <span class="text-slate-500 w-12 flex-shrink-0 font-medium">From:</span> 
+                                    <span id="emailFrom" class="font-semibold text-slate-800 break-all"></span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-slate-500 w-12 flex-shrink-0">To:</span> 
+                                    <span id="emailTo" class="text-slate-600 break-all"></span>
+                                </div>
+                                <div class="flex gap-2" id="emailCcContainer">
+                                    <span class="text-slate-500 w-12 flex-shrink-0">Cc:</span> 
+                                    <span id="emailCc" class="text-slate-600 break-all"></span>
+                                </div>
+                            </div>
+                            <div id="emailAttachments" class="hidden mt-2 pt-3 border-t border-slate-200 flex flex-wrap gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 bg-white relative w-full h-full">
+                    <iframe id="emailFrame" class="w-full h-full border-none" sandbox="allow-same-origin"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/kanban.js') }}"></script>
+<script>
+    // --- Inline Script for Modal UI Logic ---
+    function toggleModalMaximize(panelId, iconMaxId, iconMinId) {
+        const panel = document.getElementById(panelId);
+        const iconMax = document.getElementById(iconMaxId);
+        const iconMin = document.getElementById(iconMinId);
+        
+        if (!panel) return;
+
+        panel.classList.toggle('!w-full');
+        panel.classList.toggle('!h-full');
+        panel.classList.toggle('!max-w-none');
+        panel.classList.toggle('!rounded-none');
+        panel.classList.toggle('!m-0'); // Reset margin if any
+        
+        // Toggle icons
+        if (panel.classList.contains('!w-full')) {
+            if(iconMax) iconMax.classList.add('hidden');
+            if(iconMin) iconMin.classList.remove('hidden');
+            if(iconMin) iconMin.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9l-6-6M15 9h4.5M15 9V4.5M15 9l6-6M9 15v4.5M9 15H4.5M9 15l-6 6M15 15h4.5M15 15v4.5M15 15l6 6" />';
+        } else {
+            if(iconMax) iconMax.classList.remove('hidden');
+            if(iconMin) iconMin.classList.add('hidden');
+        }
+    }
+
+    function toggleEmailHeader() {
+        const details = document.getElementById('emailDetailsArea');
+        const btnText = document.getElementById('headerToggleText');
+        const icon = document.getElementById('headerToggleIcon');
+        
+        if (details.style.display === 'none') {
+            details.style.display = 'block';
+            if(btnText) btnText.innerText = 'Hide Details';
+            if(icon) icon.classList.remove('rotate-180');
+        } else {
+            details.style.display = 'none';
+            if(btnText) btnText.innerText = 'Show Details';
+            if(icon) icon.classList.add('rotate-180');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Closed Tasks - AI Task Manager{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b border-slate-300">
+        <div class="mb-4 md:mb-0">
+            <h1 class="text-3xl font-bold text-slate-800">Closed Tasks</h1>
+            <p class="text-slate-600">Review recently completed work and archived items.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <!-- Search Bar -->
+            <input type="text" id="archiveSearchInput" placeholder="Search tasks..." 
+                   class="w-full sm:w-64 p-2.5 bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-primary focus:border-primary">
+            
+            <button id="exportCsvBtn" class="pill-btn bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 !py-2.5 !px-4 w-full sm:w-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export CSV
+            </button>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    <div id="message-container" class="mb-4"></div>
+    
+    <!-- Tabs -->
+    <div class="flex space-x-6 mb-6 border-b border-slate-200">
+        <button class="archive-tab-btn active pb-3 text-sm font-bold text-green-700 border-b-2 border-green-600 transition-colors" data-tab="recent">
+            Recently Closed (Active)
+        </button>
+        <button class="archive-tab-btn pb-3 text-sm font-semibold text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors" data-tab="archived">
+            Archived History (> 2 Days)
+        </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tab-recent" class="archive-tab-content">
+        <div id="recent-grid-container">
+            <p class="text-slate-500">Loading recent tasks...</p>
+        </div>
+    </div>
+    
+    <div id="tab-archived" class="archive-tab-content hidden">
+        <div id="archive-grid-container">
+            <p class="text-slate-500">Loading archive history...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/archive.js') }}"></script>
+{% endblock %}

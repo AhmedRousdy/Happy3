@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}My Circle - AI Task Manager{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-200 pb-6">
+        <div class="mb-4 md:mb-0">
+            <h1 class="text-3xl font-bold text-slate-800">My Professional Circle</h1>
+            <p class="text-slate-600 mt-1">Manage relationships, roles, and project stakeholders.</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="openScanModal()" class="pill-btn bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                Scan History
+            </button>
+            <button onclick="openAddContactModal()" class="pill-btn bg-primary hover:bg-primary-hover text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Contact
+            </button>
+            <a href="/api/circle/export" target="_blank" class="pill-btn bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export
+            </a>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6 flex flex-col md:flex-row gap-4 items-center">
+        <div class="flex-1 w-full">
+            <input type="text" id="circleSearch" placeholder="Search by name, email, or department..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-primary focus:border-primary">
+        </div>
+        <div class="w-full md:w-64">
+            <select id="roleFilter" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-primary focus:border-primary">
+                <option value="">All Roles</option>
+                <option value="Unclassified">Unclassified</option>
+                <option value="VIP">VIP</option>
+                <option value="Stakeholder">Stakeholder</option>
+                <option value="Team Member">Team Member</option>
+                <option value="Vendor">Vendor</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Contacts Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
+                    <tr>
+                        <th class="px-6 py-4">Name / Email</th>
+                        <th class="px-6 py-4">Title & Dept</th>
+                        <th class="px-6 py-4">Role</th>
+                        <th class="px-6 py-4">Projects</th> <!-- Added Projects Column -->
+                        <th class="px-6 py-4 text-center">Interactions</th>
+                        <th class="px-6 py-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contactsTableBody" class="divide-y divide-slate-100">
+                    <!-- JS will populate rows -->
+                    <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Loading contacts...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="contactModalOverlay" class="modal-overlay">
+    <div class="modal-panel rounded-xl !w-auto max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="modalTitle" class="text-xl font-bold text-slate-800">Edit Contact</h2>
+            <button onclick="closeContactModal()" class="text-slate-400 hover:text-slate-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <form id="contactForm" class="space-y-6">
+            <input type="hidden" id="contactId">
+            
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                    <input type="text" id="contactName" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" id="contactEmail" class="w-full p-2 border border-slate-300 rounded focus:border-primary" disabled>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Job Title</label>
+                    <input type="text" id="contactTitle" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Department</label>
+                    <input type="text" id="contactDept" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">General Role / Classification</label>
+                    <select id="contactRole" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+                        <option value="">Unclassified</option>
+                        <option value="VIP">VIP (Executive Leadership)</option>
+                        <option value="Stakeholder">Project Stakeholder</option>
+                        <option value="Team Member">My Team / Direct Report</option>
+                        <option value="Manager">My Manager</option>
+                        <option value="Vendor">External Vendor</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="border-slate-200">
+
+            <!-- Project Matrix -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-bold text-slate-700">Project Involvement</label>
+                    <button type="button" onclick="addProjectRow()" class="text-xs font-semibold text-primary hover:text-blue-700 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add Project
+                    </button>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-100">
+                            <tr>
+                                <th class="px-2 py-1">Project</th>
+                                <th class="px-2 py-1">Role in Project</th>
+                                <th class="px-2 py-1 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectListBody" class="divide-y divide-slate-200">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                    <div id="noProjectsMsg" class="text-center text-slate-400 text-xs py-2 hidden">No projects assigned.</div>
+                </div>
+            </div>
+
+            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-4">
+                <button type="button" onclick="closeContactModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white rounded hover:bg-blue-800">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Profile Modal (Meeting Prep) -->
+<div id="profileModalOverlay" class="modal-overlay">
+    <div class="modal-panel rounded-xl !w-auto max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-6">
+            <div class="flex items-center gap-4">
+                <div class="h-16 w-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold" id="profileInitials"></div>
+                <div>
+                    <h2 id="profileName" class="text-2xl font-bold text-slate-800"></h2>
+                    <p id="profileTitle" class="text-slate-600"></p>
+                    <p id="profileMeta" class="text-sm text-slate-400 mt-1"></p>
+                </div>
+            </div>
+            <button onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reports To</h3>
+                <p id="profileManager" class="text-slate-800 font-medium">Unknown</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Office Location</h3>
+                <p id="profileOffice" class="text-slate-800 font-medium">Unknown</p>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Active Tasks (Meeting Agenda)
+            </h3>
+            <div id="profileActiveTasks" class="space-y-3"></div>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Recently Completed
+            </h3>
+            <div id="profileHistory" class="space-y-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Scan Range Modal -->
+<div id="scanModalOverlay" class="modal-overlay">
+    <div class="modal-panel rounded-xl !w-auto max-w-md w-full">
+        <h2 class="text-xl font-bold text-slate-800 mb-4">Scan Network History</h2>
+        <p class="text-sm text-slate-500 mb-4">Select a date range to discover contacts from past emails. This will NOT generate tasks, only build your network.</p>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                <input type="date" id="scanStartDate" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                <input type="date" id="scanEndDate" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+            </div>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeScanModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">Cancel</button>
+            <button id="startScanBtn" onclick="performScan()" class="px-6 py-2 bg-primary text-white rounded hover:bg-blue-800 flex items-center">
+                <span id="scanBtnText">Start Scan</span>
+                <svg id="scanSpinner" class="hidden h-4 w-4 ml-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Messages Container -->
+<div id="message-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/circle.js') }}"></script>
+{% endblock %}

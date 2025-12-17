@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Daily News - AI Task Manager{% endblock %}
+
+{% block content %}
+<!--
+---
+--- THIS IS THE FIX ---
+- Redesigned header to match the new styles.
+---
+-->
+<div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b border-slate-300">
+        <div class="mb-4 md:mb-0">
+            <h1 class="text-3xl font-bold text-slate-800">Daily News Briefing</h1>
+            <p class="text-slate-600">AI-generated summaries of non-task-related emails.</p>
+        </div>
+        <!-- 
+        All buttons are now dynamically generated on the summary cards below.
+        -->
+    </header>
+    <!-- --- END OF FIX --- -->
+
+    <!-- Messages -->
+    <div id="message-container" class="mb-4"></div>
+    
+    <!-- News Summaries Container -->
+    <div id="news-summaries-container" class="space-y-6">
+        <!-- Summaries will be injected here by news.js -->
+        <p class="text-slate-500">Loading summaries...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/news.js') }}"></script>
+{% endblock %}

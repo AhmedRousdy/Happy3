@@ -1,0 +1,94 @@
+<!-- Filename: templates/reports.html -->
+<!-- Role: Interface for Report Generation (Standard & Consolidated) -->
+
+{% extends "base.html" %}
+
+{% block title %}Executive Reports - AI Task Manager{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 pb-4 border-b border-slate-200">
+        <div class="mb-4 md:mb-0">
+            <h1 class="text-3xl font-bold text-slate-800">Executive Reports</h1>
+            <p class="text-slate-500 mt-1">Weekly achievements, planned work, and consolidated summaries.</p>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="openGenerateModal()" class="pill-btn bg-primary hover:bg-primary-hover text-white flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Generate Standard Report
+            </button>
+            <button onclick="openConsolidateModal()" class="pill-btn bg-indigo-600 hover:bg-indigo-700 text-white flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                Generate AI Consolidated Report
+            </button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-semibold text-slate-800">Available Reports</h3>
+                <button onclick="loadReports()" class="text-sm text-primary hover:underline">Refresh List</button>
+            </div>
+            <ul id="reportsList" class="divide-y divide-slate-100">
+                <li class="px-6 py-8 text-center text-slate-500">Loading reports...</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Standard Report Modal -->
+<div id="generateModal" class="modal-overlay">
+    <div class="modal-panel rounded-xl !w-auto max-w-md w-full">
+        <h2 class="text-xl font-bold text-slate-800 mb-4">Generate Weekly Report</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                <input type="date" id="reportStartDate" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                <input type="date" id="reportEndDate" class="w-full p-2 border border-slate-300 rounded focus:border-primary">
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeGenerateModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">Cancel</button>
+            <button id="confirmGenerateBtn" onclick="generateReport('standard')" class="px-6 py-2 bg-primary hover:bg-primary-hover text-white rounded flex items-center">
+                Generate HTML
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Consolidated Report Modal -->
+<div id="consolidateModal" class="modal-overlay">
+    <div class="modal-panel rounded-xl !w-auto max-w-md w-full">
+        <h2 class="text-xl font-bold text-indigo-900 mb-2">AI Consolidated Report</h2>
+        <p class="text-sm text-slate-500 mb-4">This uses AI to parse the standard weekly data, merge duplicates, and summarize progress by project into a concise Markdown document.</p>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                <input type="date" id="consolStartDate" class="w-full p-2 border border-slate-300 rounded focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                <input type="date" id="consolEndDate" class="w-full p-2 border border-slate-300 rounded focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeConsolidateModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">Cancel</button>
+            <button id="confirmConsolBtn" onclick="generateReport('consolidated')" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                Generate with AI
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+{% endblock %}

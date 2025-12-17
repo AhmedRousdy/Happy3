@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Task Manager{% endblock %}</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ url_for('static', filename='js/tailwind.config.js') }}"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display.swap" rel="stylesheet">
+    
+    <!-- Heroicons -->
+    <script type="module" src="https://unpkg.com/heroicons@2.1.3/24/outline/index.js"></script>
+    <script type="module" src="https://unpkg.com/heroicons@2.1.3/24/solid/index.js"></script>
+</head>
+<body class="bg-slate-100 font-sans">
+
+    <!-- Desktop Sidebar -->
+    <aside class="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:z-50 md:w-60 bg-white shadow-sm border-r border-slate-200">
+        <div class="flex items-center gap-2 px-6 h-20 border-b border-slate-200">
+            <svg class="h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+            <span class="font-bold text-xl text-primary">AI Task Manager</span>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto px-4 py-4">
+            <ul class="space-y-1">
+                <li>
+                    <a href="{{ url_for('views.index') }}" 
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold transition-all
+                              {% if request.path == url_for('views.index') %}
+                                  bg-blue-50 text-primary
+                              {% else %}
+                                  text-slate-600 hover:bg-slate-50 hover:text-slate-900
+                              {% endif %}">
+                       <hero-icon outline name="view-columns" class="h-6 w-6"></hero-icon>
+                       Kanban
+                    </a>
+                </li>
+                 <li>
+                    <a href="{{ url_for('views.archive_page') }}"
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold transition-all
+                              {% if request.path == url_for('views.archive_page') %}
+                                  bg-blue-50 text-primary
+                              {% else %}
+                                  text-slate-600 hover:bg-slate-50 hover:text-slate-900
+                              {% endif %}">
+                       <hero-icon outline name="archive-box" class="h-6 w-6"></hero-icon>
+                       Closed
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('views.news_page') }}"
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold transition-all
+                              {% if request.path == url_for('views.news_page') %}
+                                  bg-blue-50 text-primary
+                              {% else %}
+                                  text-slate-600 hover:bg-slate-50 hover:text-slate-900
+                              {% endif %}">
+                       <hero-icon outline name="newspaper" class="h-6 w-6"></hero-icon>
+                       Latest News
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('views.reports_page') }}"
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold transition-all
+                              {% if request.path == url_for('views.reports_page') %}
+                                  bg-blue-50 text-primary
+                              {% else %}
+                                  text-slate-600 hover:bg-slate-50 hover:text-slate-900
+                              {% endif %}">
+                       <hero-icon outline name="document-chart-bar" class="h-6 w-6"></hero-icon>
+                       Reports
+                    </a>
+                </li>
+                <!-- NEW: Circle Link -->
+                <li>
+                    <a href="{{ url_for('views.circle_page') }}"
+                       class="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold transition-all
+                              {% if request.path == url_for('views.circle_page') %}
+                                  bg-blue-50 text-primary
+                              {% else %}
+                                  text-slate-600 hover:bg-slate-50 hover:text-slate-900
+                              {% endif %}">
+                       <hero-icon outline name="user-group" class="h-6 w-6"></hero-icon>
+                       Circle
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Mobile Bottom Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-inner">
+        <div class="flex justify-around items-center h-16">
+            <a href="{{ url_for('views.index') }}" 
+               class="flex flex-col items-center justify-center p-2 rounded-lg transition-all
+                      {% if request.path == url_for('views.index') %} text-primary {% else %} text-slate-500 hover:text-primary hover:bg-blue-50 {% endif %}">
+               <hero-icon outline name="view-columns" class="h-6 w-6"></hero-icon>
+               <span class="text-xs font-medium">Kanban</span>
+            </a>
+            <a href="{{ url_for('views.archive_page') }}"
+               class="flex flex-col items-center justify-center p-2 rounded-lg transition-all
+                      {% if request.path == url_for('views.archive_page') %} text-primary {% else %} text-slate-500 hover:text-primary hover:bg-blue-50 {% endif %}">
+               <hero-icon outline name="archive-box" class="h-6 w-6"></hero-icon>
+               <span class="text-xs font-medium">Closed</span>
+            </a>
+            <a href="{{ url_for('views.news_page') }}"
+               class="flex flex-col items-center justify-center p-2 rounded-lg transition-all
+                      {% if request.path == url_for('views.news_page') %} text-primary {% else %} text-slate-500 hover:text-primary hover:bg-blue-50 {% endif %}">
+               <hero-icon outline name="newspaper" class="h-6 w-6"></hero-icon>
+               <span class="text-xs font-medium">News</span>
+            </a>
+            <a href="{{ url_for('views.reports_page') }}"
+               class="flex flex-col items-center justify-center p-2 rounded-lg transition-all
+                      {% if request.path == url_for('views.reports_page') %} text-primary {% else %} text-slate-500 hover:text-primary hover:bg-blue-50 {% endif %}">
+               <hero-icon outline name="document-chart-bar" class="h-6 w-6"></hero-icon>
+               <span class="text-xs font-medium">Reports</span>
+            </a>
+            <!-- NEW: Mobile Circle Link -->
+            <a href="{{ url_for('views.circle_page') }}"
+               class="flex flex-col items-center justify-center p-2 rounded-lg transition-all
+                      {% if request.path == url_for('views.circle_page') %} text-primary {% else %} text-slate-500 hover:text-primary hover:bg-blue-50 {% endif %}">
+               <hero-icon outline name="user-group" class="h-6 w-6"></hero-icon>
+               <span class="text-xs font-medium">Circle</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="md:pl-60 pb-20 md:pb-0">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
