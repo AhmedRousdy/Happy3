@@ -1,0 +1,218 @@
+/*
+---
+--- STYLES.CSS ---
+--- Updated with SLA and Heartbeat Animations
+---
+*/
+
+body { 
+    font-family: 'Inter', sans-serif; 
+}
+
+/* --- Priority Label Base --- */
+.priority-label {
+    display: inline-block;
+    padding: 0.125rem 0.625rem; /* py-0.5 px-2.5 */
+    font-size: 0.75rem; /* text-xs */
+    font-weight: 600; /* font-semibold */
+    border-radius: 9999px; /* rounded-full */
+    text-transform: capitalize;
+}
+
+/* --- Spin Animation --- */
+.sync-btn-spin {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- SLA Heartbeat Animation (For Overdue Items) --- */
+@keyframes heartbeat {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.7); }
+}
+
+.sla-overdue-pulse {
+    animation: heartbeat 2s infinite;
+    border-color: #ef4444 !important; /* Tailwind red-500 */
+}
+
+/* --- Modal Overlay Logic --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100; /* Higher z-index than sidebar */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
+.modal-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Modal Panel Base Style --- */
+.modal-panel {
+    background-color: white;
+    border-radius: 0.75rem; /* rounded-xl */
+    padding: 1.5rem 2rem; /* p-6 md:p-8 */
+    max-width: 90%;
+    width: 600px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-20px);
+    transition: all 0.3s ease-in-out;
+}
+@media (max-width: 768px) {
+    .modal-panel {
+        padding: 1.5rem;
+    }
+}
+.modal-overlay.is-visible .modal-panel {
+    transform: translateY(0);
+}
+
+/* --- Archive & Settings Overlays (Full Screen) --- */
+#archiveOverlay, #settingsOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #f8fafc; /* slate-50 */
+    z-index: 110; /* Higher than task modal */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+    padding: 2rem;
+    overflow-y: auto;
+}
+#archiveOverlay.is-visible, #settingsOverlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+@media (max-width: 768px) {
+    #archiveOverlay, #settingsOverlay {
+        padding: 1rem;
+    }
+}
+
+
+/* --- Archive Grid --- */
+#archive-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr 2fr 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+}
+@media (max-width: 1024px) {
+    #archive-grid {
+        /* Stack on smaller screens */
+        display: block;
+    }
+}
+.archive-header {
+    font-weight: 600;
+    color: #475569; /* slate-600 */
+    padding: 0.75rem;
+    background-color: #e2e8f0; /* slate-200 */
+}
+.archive-cell {
+    padding: 0.75rem;
+    background-color: #fff;
+    border-bottom: 1px solid #e2e8f0; /* slate-200 */
+    font-size: 0.875rem;
+    color: #334155; /* slate-700 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (max-width: 1024px) {
+    .archive-header { display: none; }
+    .archive-cell {
+        display: block;
+        white-space: normal;
+        border-bottom: none;
+        padding: 0.25rem 0.75rem;
+    }
+    .archive-cell[style*="grid-column: 1"] { font-weight: 600; font-size: 1.1rem; padding-top: 1rem; }
+    .archive-cell[style*="grid-column: 2"]::before { content: "From: "; font-weight: 600; }
+    .archive-cell[style*="grid-column: 3"]::before { content: "Subject: "; font-weight: 600; }
+    .archive-cell[style*="grid-column: 6"] { padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; }
+    .archive-cell[style*="grid-column: 6"]::before { content: "Date: "; font-weight: 600; }
+
+}
+
+.archive-month-header {
+    grid-column: 1 / -1;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b; /* slate-800 */
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #cbd5e1; /* slate-300 */
+}
+@media (max-width: 1024px) {
+    .archive-month-header {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.date-group-header {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569; /* text-slate-600 */
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid #e2e8f0; /* border-slate-200 */
+}
+.date-group-header:first-of-type {
+    margin-top: 0;
+}
+
+.recipient-list {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 450px;
+}
+
+/* --- Pill Button Base --- */
+.pill-btn {
+    font-weight: 700;
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+}
+.pill-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* --- Prose Overrides --- */
+.prose {
+    color: #334155; /* prose-slate */
+}
+.prose strong {
+    color: #1e293b;
+}
+.prose br {
+    display: block;
+    content: "";
+    margin-top: 0.5em;
+}
